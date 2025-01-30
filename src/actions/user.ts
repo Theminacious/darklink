@@ -3,6 +3,7 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { client } from '../lib/prisma'
 
+
 export const onAuthenticateUser = async()=>{
     try{
         const user = await currentUser()
@@ -71,7 +72,41 @@ export const onAuthenticateUser = async()=>{
         return {status:400}
         
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     catch(e){
         return {status:500}
     }
 }
+
+
+
+export const getNotifications = async () => {
+    try{
+      const user = await currentUser();
+      if(!user){
+        return {status:404}
+      }
+      const notifications= await client.user.findUnique({
+        where:{
+            clerkid:user.id,
+        },
+        select:{
+          notification:true,
+          _count:{
+            select:{
+              notification:true,
+            },
+          },
+        },
+        })
+        if(notifications && notifications.notification.length>0){
+          return {status:200, data:notifications}
+        }
+        return {status:404,data:[]}
+        
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    catch(error){
+      return {status:400,data:[]}
+    }
+  }
